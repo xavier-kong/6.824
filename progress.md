@@ -1,0 +1,1 @@
+- [x] reading map reduce paper
