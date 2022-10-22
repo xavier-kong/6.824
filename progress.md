@@ -1,1 +1,2 @@
 - [x] reading map reduce paper
+- [x] watch lecture 1
