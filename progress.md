@@ -1,3 +1,5 @@
 - [x] reading map reduce paper
 - [x] watch lecture 1
-- [] go tutorial https://go.dev/tour/concurrency/8
+- [x] tour of go
+- [x] how to write go code 
+- [] effective go
