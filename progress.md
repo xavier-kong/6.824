@@ -3,4 +3,4 @@
 - [x] tour of go
 - [x] how to write go code 
 - [] effective go
-	https://go.dev/doc/effective_go#initialization
+	https://go.dev/doc/effective_go#interfaces_and_types
