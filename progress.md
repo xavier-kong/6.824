@@ -1,6 +1,10 @@
-- [x] reading map reduce paper
-- [x] watch lecture 1
-- [x] tour of go
-- [x] how to write go code 
-- [] effective go
-	https://go.dev/doc/effective_go#interfaces_and_types
+https://pdos.csail.mit.edu/6.824/schedule.html
+
+- Lec 1:
+	- [x] reading map reduce paper
+	- [x] watch lecture 1
+- Lec 2:
+	- [x] tour of go
+	- [x] how to write go code 
+	- [x] effective go
+	- [] watch lecture 2
