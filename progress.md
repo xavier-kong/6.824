@@ -7,4 +7,5 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 	- [x] tour of go
 	- [x] how to write go code 
 	- [x] effective go
-	- [] watch lecture 2
+	- [x] watch lecture 2
+		- [] review crawler.go and kv.go
