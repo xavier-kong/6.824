@@ -1,16 +1,22 @@
 package mr
 
-import "log"
-import "net"
-import "os"
-import "net/rpc"
-import "net/http"
-
+import (
+	"log"
+	"net"
+	"net/http"
+	"net/rpc"
+	"os"
+)
 
 type Coordinator struct {
 	// Your definitions here.
 
 }
+
+// 0 = unprocessed
+// 1 = processing
+// 2 = processed
+type FilesProcessed map[string]int
 
 // Your code here -- RPC handlers for the worker to call.
 
@@ -19,11 +25,44 @@ type Coordinator struct {
 //
 // the RPC argument and reply types are defined in rpc.go.
 //
+
+var filesProcessedMap FilesProcessed
+
 func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 	reply.Y = args.X + 1
 	return nil
 }
 
+func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
+	if args.Status == "ready" {
+		filename := c.FetchUnproccessedFileName()
+		reply.Filename = filename
+	}
+	return nil
+}
+
+func (c *Coordinator) AddFileNamesToMap() error {
+	for _, filename := range os.Args[2:] {
+		file, err := os.Open(filename)
+		if err != nil {
+			log.Fatalf("cannot open %v", filename)
+		}
+		filesProcessedMap[filename] = 0
+		file.Close()
+	}
+	return nil
+}
+
+func (c *Coordinator) FetchUnproccessedFileName() string {
+	var unprocessedFilename string
+	for filename, status := range filesProcessedMap {
+		if status == 0 {
+			unprocessedFilename = filename
+			break
+		}
+	}
+	return unprocessedFilename
+}
 
 //
 // start a thread that listens for RPCs from worker.go
@@ -50,7 +89,6 @@ func (c *Coordinator) Done() bool {
 
 	// Your code here.
 
-
 	return ret
 }
 
@@ -63,8 +101,8 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
 
 	// Your code here.
-
-
+	filesProcessedMap = make(FilesProcessed)
 	c.server()
+	c.AddFileNamesToMap()
 	return &c
 }

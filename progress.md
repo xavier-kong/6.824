@@ -9,5 +9,12 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 	- [x] effective go
 	- [x] watch lecture 2
 		- [x] review crawler.go and kv.go
+- Lec 3:
+	- [] read GFS paper
+		- 2.6 metadata
+
+
+
 - Lab 1
+
 
