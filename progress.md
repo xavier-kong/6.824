@@ -10,6 +10,8 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 	- [x] watch lecture 2
 		- [x] review crawler.go and kv.go
 - Lec 3:
+	- [] go by example
+		- [] generics (https://gobyexample.com/generics)
 	- [] read GFS paper
 		- 2.6 metadata
 
