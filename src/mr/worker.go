@@ -3,8 +3,10 @@ package mr
 import (
 	"fmt"
 	"hash/fnv"
+	"io/ioutil"
 	"log"
 	"net/rpc"
+	"os"
 )
 
 //
@@ -34,12 +36,26 @@ func Worker(mapf func(string, string) []KeyValue,
 	// Your worker implementation here.
 
 	// uncomment to send the Example RPC to the coordinator.
-	CallExample()
-	RequestTask()
+	//CallExample()
+	filename := RequestTask()
+	if filename == "" {
+		fmt.Printf("NO FILE NAME")
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("cannot open %v", filename)
+	}
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatalf("cannot read %v", filename)
+	}
+	file.Close()
+	fmt.Println(string(content))
 
 }
 
-func RequestTask() {
+func RequestTask() string {
 
 	args := RequestTaskArgs{Status: "ready"}
 	reply := RequestTaskReply{}
@@ -47,8 +63,10 @@ func RequestTask() {
 	ok := call("Coordinator.RequestTask", &args, &reply)
 	if ok {
 		fmt.Printf("File name: %v\n", reply.Filename)
+		return reply.Filename
 	} else {
 		fmt.Printf("Error requesting task!]\n")
+		return ""
 	}
 }
 

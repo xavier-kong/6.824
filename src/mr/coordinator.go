@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"sync"
 )
 
 type Coordinator struct {
@@ -16,7 +17,10 @@ type Coordinator struct {
 // 0 = unprocessed
 // 1 = processing
 // 2 = processed
-type FilesProcessed map[string]int
+type filesProcessed struct {
+	mu      sync.Mutex
+	filemap map[string]int
+}
 
 // Your code here -- RPC handlers for the worker to call.
 
@@ -26,7 +30,7 @@ type FilesProcessed map[string]int
 // the RPC argument and reply types are defined in rpc.go.
 //
 
-var filesProcessedMap FilesProcessed
+var filesProcessedMap = new(filesProcessed)
 
 func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 	reply.Y = args.X + 1
@@ -47,7 +51,7 @@ func (c *Coordinator) AddFileNamesToMap() error {
 		if err != nil {
 			log.Fatalf("cannot open %v", filename)
 		}
-		filesProcessedMap[filename] = 0
+		filesProcessedMap.filemap[filename] = 0
 		file.Close()
 	}
 	return nil
@@ -55,7 +59,9 @@ func (c *Coordinator) AddFileNamesToMap() error {
 
 func (c *Coordinator) FetchUnproccessedFileName() string {
 	var unprocessedFilename string
-	for filename, status := range filesProcessedMap {
+	filesProcessedMap.mu.Lock()
+	defer filesProcessedMap.mu.Unlock()
+	for filename, status := range filesProcessedMap.filemap {
 		if status == 0 {
 			unprocessedFilename = filename
 			break
@@ -101,8 +107,8 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
 
 	// Your code here.
-	filesProcessedMap = make(FilesProcessed)
-	c.server()
+	filesProcessedMap.filemap = make(map[string]int)
 	c.AddFileNamesToMap()
+	c.server()
 	return &c
 }
