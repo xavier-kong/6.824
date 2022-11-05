@@ -34,3 +34,7 @@ To get started:
 	[] wait so im not supposed to write my own map function?
 4. modify worker to call map function like in mrsequential.go
 5. implement coordinator 10s wait for worker to complete else give to other worker
+
+
+
+- maybe worker can keep requesting for map tasks until nill returned then start requesting reduce tasks

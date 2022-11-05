@@ -1,14 +1,13 @@
 package mr
 
 import (
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io/ioutil"
 	"log"
 	"net/rpc"
 	"os"
-	"strings"
-	"unicode"
 )
 
 //
@@ -39,11 +38,20 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the coordinator.
 	//CallExample()
-	filename := RequestTask()
-	if filename == "" {
-		fmt.Printf("NO FILE NAME")
+	filename, err := RequestTask()
+
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
+	contents := getContentsOfFileAsString(filename)
+	//wordCounts := mapf(filename, contents)
+	mapf(filename, contents)
+
+}
+
+func getContentsOfFileAsString(filename string) string {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("cannot open %v", filename)
@@ -54,41 +62,26 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 	file.Close()
 	contents := string(contentsBuffer)
-
-	wordCounts := getWordCount(contents)
-	fmt.Println(wordCounts)
-
+	return contents
 }
 
-func RequestTask() string {
+func RequestTask() (string, error) {
 
 	args := RequestTaskArgs{Status: "ready"}
 	reply := RequestTaskReply{}
 
 	ok := call("Coordinator.RequestTask", &args, &reply)
-	if ok {
-		fmt.Printf("File name: %v\n", reply.Filename)
-		return reply.Filename
-	} else {
-		fmt.Printf("Error requesting task!]\n")
-		return ""
-	}
-}
 
-// most taken from Map function in wc.go
-func getWordCount(contents string) []KeyValue {
-	ff := func(r rune) bool { return !unicode.IsLetter(r) }
-
-	words := strings.FieldsFunc(contents, ff)
-
-	kva := []KeyValue{}
-
-	for _, w := range words {
-		kv := KeyValue{w, "1"}
-		kva = append(kva, kv)
+	if !ok {
+		fmt.Println("Error requesting task!")
+		return "", errors.New("error requesting task")
 	}
 
-	return kva
+	if reply.Filename == "" {
+		return "", errors.New("file name is null")
+	}
+
+	return reply.Filename, nil
 }
 
 //
