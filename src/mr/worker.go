@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"strings"
+	"unicode"
 )
 
 //
@@ -46,12 +48,15 @@ func Worker(mapf func(string, string) []KeyValue,
 	if err != nil {
 		log.Fatalf("cannot open %v", filename)
 	}
-	content, err := ioutil.ReadAll(file)
+	contentsBuffer, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Fatalf("cannot read %v", filename)
 	}
 	file.Close()
-	fmt.Println(string(content))
+	contents := string(contentsBuffer)
+
+	wordCounts := getWordCount(contents)
+	fmt.Println(wordCounts)
 
 }
 
@@ -68,6 +73,22 @@ func RequestTask() string {
 		fmt.Printf("Error requesting task!]\n")
 		return ""
 	}
+}
+
+// most taken from Map function in wc.go
+func getWordCount(contents string) []KeyValue {
+	ff := func(r rune) bool { return !unicode.IsLetter(r) }
+
+	words := strings.FieldsFunc(contents, ff)
+
+	kva := []KeyValue{}
+
+	for _, w := range words {
+		kv := KeyValue{w, "1"}
+		kva = append(kva, kv)
+	}
+
+	return kva
 }
 
 //

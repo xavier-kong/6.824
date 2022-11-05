@@ -31,5 +31,6 @@ To get started:
 	[x] lock before accessing and modifying map
 	[x] on request, send filename of file that is not started processing
 3. modify worker to read the file
+	[] wait so im not supposed to write my own map function?
 4. modify worker to call map function like in mrsequential.go
 5. implement coordinator 10s wait for worker to complete else give to other worker

@@ -14,5 +14,5 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 	- [] read GFS paper
 		- 3 system interactions
 
-- Lab 1
+- Lab 1 (https://pdos.csail.mit.edu/6.824/labs/lab-mr.html)
 
