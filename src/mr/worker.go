@@ -8,7 +8,16 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"sort"
 )
+
+// for sorting by key.
+type ByKey []KeyValue
+
+// for sorting by key.
+func (a ByKey) Len() int           { return len(a) }
+func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 //
 // Map functions return a slice of KeyValue.
@@ -38,7 +47,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the coordinator.
 	//CallExample()
-	filename, err := RequestTask()
+	filename, nReduce, err := RequestTask()
 
 	if err != nil {
 		fmt.Println(err)
@@ -46,9 +55,11 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 
 	contents := getContentsOfFileAsString(filename)
-	//wordCounts := mapf(filename, contents)
-	mapf(filename, contents)
+	wordCounts := mapf(filename, contents)
 
+	sort.Sort(ByKey(wordCounts))
+	// parition into nReduce buckets?
+	// for loop => slices of wordCounts
 }
 
 func getContentsOfFileAsString(filename string) string {
@@ -65,7 +76,7 @@ func getContentsOfFileAsString(filename string) string {
 	return contents
 }
 
-func RequestTask() (string, error) {
+func RequestTask() (string, int, error) {
 
 	args := RequestTaskArgs{Status: "ready"}
 	reply := RequestTaskReply{}
@@ -74,14 +85,18 @@ func RequestTask() (string, error) {
 
 	if !ok {
 		fmt.Println("Error requesting task!")
-		return "", errors.New("error requesting task")
+		return "", 0, errors.New("error requesting task")
 	}
 
 	if reply.Filename == "" {
-		return "", errors.New("file name is null")
+		return "", 0, errors.New("file name is null")
 	}
 
-	return reply.Filename, nil
+	if reply.nReduce == 0 {
+		return "", 0, errors.New("nReduce received is 0")
+	}
+
+	return reply.Filename, reply.nReduce, nil
 }
 
 //

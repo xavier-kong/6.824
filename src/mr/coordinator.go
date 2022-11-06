@@ -10,6 +10,7 @@ import (
 )
 
 type Coordinator struct {
+	nReduce int
 	// Your definitions here.
 
 }
@@ -41,6 +42,7 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
 		reply.Filename = filename
+		reply.nReduce = c.nReduce
 	}
 	return nil
 }
@@ -110,5 +112,6 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	filesProcessedMap.filemap = make(map[string]int)
 	c.AddFileNamesToMap()
 	c.server()
+	c.nReduce = nReduce
 	return &c
 }
