@@ -57,7 +57,14 @@ func Worker(mapf func(string, string) []KeyValue,
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
 
+	sliceLength := len(wordCounts) / nReduce
+
 	sort.Sort(ByKey(wordCounts))
+	for i := 0; i < len(wordCounts); i += sliceLength {
+		start, end := i, i+sliceLength
+		wordCountsSlice := wordCounts[start:end]
+		intermediateFile, _ := os.Create()
+	}
 	// parition into nReduce buckets?
 	// for loop => slices of wordCounts
 }
