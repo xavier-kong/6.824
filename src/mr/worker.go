@@ -9,6 +9,7 @@ import (
 	"net/rpc"
 	"os"
 	"sort"
+	"strconv"
 )
 
 // for sorting by key.
@@ -60,13 +61,15 @@ func Worker(mapf func(string, string) []KeyValue,
 	sliceLength := len(wordCounts) / nReduce
 
 	sort.Sort(ByKey(wordCounts))
-	for i := 0; i < len(wordCounts); i += sliceLength {
-		start, end := i, i+sliceLength
+	for i := 0; i < nReduce; i += 1 {
+		start := i * sliceLength
+		end := start + sliceLength
+		intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(i)
 		wordCountsSlice := wordCounts[start:end]
-		intermediateFile, _ := os.Create()
+		intermediateFile, _ := os.Create(intermediateFileName)
+		fmt.Fprint(intermediateFile, wordCountsSlice)
+		intermediateFile.Close()
 	}
-	// parition into nReduce buckets?
-	// for loop => slices of wordCounts
 }
 
 func getContentsOfFileAsString(filename string) string {
@@ -99,11 +102,11 @@ func RequestTask() (string, int, error) {
 		return "", 0, errors.New("file name is null")
 	}
 
-	if reply.nReduce == 0 {
+	if reply.NReduce == 0 {
 		return "", 0, errors.New("nReduce received is 0")
 	}
 
-	return reply.Filename, reply.nReduce, nil
+	return reply.Filename, reply.NReduce, nil
 }
 
 //

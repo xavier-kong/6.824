@@ -41,8 +41,11 @@ func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
-		reply.Filename = filename
-		reply.nReduce = c.nReduce
+		*reply = RequestTaskReply{
+			Filename: filename,
+			NReduce:  c.nReduce,
+		}
+		return nil
 	}
 	return nil
 }
@@ -106,12 +109,11 @@ func (c *Coordinator) Done() bool {
 // nReduce is the number of reduce tasks to use.
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
-	c := Coordinator{}
+	c := Coordinator{nReduce: nReduce}
 
 	// Your code here.
 	filesProcessedMap.filemap = make(map[string]int)
 	c.AddFileNamesToMap()
 	c.server()
-	c.nReduce = nReduce
 	return &c
 }

@@ -30,7 +30,7 @@ type RequestTaskArgs struct {
 
 type RequestTaskReply struct {
 	Filename string
-	nReduce  int
+	NReduce  int
 }
 
 // Add your RPC definitions here.
