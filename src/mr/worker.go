@@ -64,11 +64,8 @@ func Worker(mapf func(string, string) []KeyValue,
 	for i := 0; i < nReduce; i += 1 {
 		start := i * sliceLength
 		end := start + sliceLength
-		intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(i)
 		wordCountsSlice := wordCounts[start:end]
-		intermediateFile, _ := os.Create(intermediateFileName)
-		fmt.Fprint(intermediateFile, wordCountsSlice)
-		intermediateFile.Close()
+		writeWordCountsToFile(i, wordCountsSlice, filename)
 	}
 }
 
@@ -84,6 +81,13 @@ func getContentsOfFileAsString(filename string) string {
 	file.Close()
 	contents := string(contentsBuffer)
 	return contents
+}
+
+func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename string) {
+	intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(count)
+	intermediateFile, _ := os.Create(intermediateFileName)
+	fmt.Fprint(intermediateFile, wordCountsSlice)
+	intermediateFile.Close()
 }
 
 func RequestTask() (string, int, error) {
