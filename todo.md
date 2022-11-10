@@ -24,18 +24,9 @@
 
 
 To get started:
-[x] modify mr/worker.go's Worker() to send RPC to coordinator asking for task
-[x] modify coordinator to respond with file name of unstarted map task
-	[x] create map of all files on start { filename: status }
-	[x] create struct type with map and sync mutex
-	[x] lock before accessing and modifying map
-	[x] on request, send filename of file that is not started processing
-3. modify worker to read the file
-	[x]
-4. modify worker to call map function like in mrsequential.go
-	[x]
-5. implement coordinator 10s wait for worker to complete else give to other worker
+[] coordinator calculate when map, reduce or done
+	[] need to wait for all maps to complete before beginning reduce
+[] implement coordinator 10s wait for worker to complete else give to other worker
 
 
 
-- maybe worker can keep requesting for map tasks until nill returned then start requesting reduce tasks

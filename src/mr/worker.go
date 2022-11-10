@@ -48,13 +48,27 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the coordinator.
 	//CallExample()
-	filename, nReduce, err := RequestTask()
 
-	if err != nil {
-		fmt.Println(err)
-		return
+	for {
+		status, filename, nReduce, err := RequestTask()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		switch status {
+		case "map":
+			runMap(filename, mapf, nReduce)
+		case "reduce":
+			runReduce(reducef)
+		default:
+			return
+		}
 	}
 
+}
+
+func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
 
@@ -67,6 +81,10 @@ func Worker(mapf func(string, string) []KeyValue,
 		wordCountsSlice := wordCounts[start:end]
 		writeWordCountsToFile(i, wordCountsSlice, filename)
 	}
+}
+
+func runReduce(reducef func(string, []string) string) {
+
 }
 
 func getContentsOfFileAsString(filename string) string {
@@ -90,7 +108,7 @@ func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename strin
 	intermediateFile.Close()
 }
 
-func RequestTask() (string, int, error) {
+func RequestTask() (string, string, int, error) {
 
 	args := RequestTaskArgs{Status: "ready"}
 	reply := RequestTaskReply{}
@@ -99,18 +117,22 @@ func RequestTask() (string, int, error) {
 
 	if !ok {
 		fmt.Println("Error requesting task!")
-		return "", 0, errors.New("error requesting task")
+		return "", "", 0, errors.New("error requesting task")
 	}
 
 	if reply.Filename == "" {
-		return "", 0, errors.New("file name is null")
+		return "", "", 0, errors.New("file name is null")
 	}
 
 	if reply.NReduce == 0 {
-		return "", 0, errors.New("nReduce received is 0")
+		return "", "", 0, errors.New("nReduce received is 0")
 	}
 
-	return reply.Filename, reply.NReduce, nil
+	if reply.Status == "" {
+		return "", "", 0, errors.New("status received is null")
+	}
+
+	return reply.Status, reply.Filename, reply.NReduce, nil
 }
 
 //
