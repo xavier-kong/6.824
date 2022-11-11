@@ -81,6 +81,8 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 		wordCountsSlice := wordCounts[start:end]
 		writeWordCountsToFile(i, wordCountsSlice, filename)
 	}
+
+	go ReportComplete(filename)
 }
 
 func runReduce(reducef func(string, []string) string) {
@@ -162,6 +164,14 @@ func CallExample() {
 	} else {
 		fmt.Printf("call failed!\n")
 	}
+}
+
+func ReportComplete(filename string) {
+	args := ReportCompleteArgs{Filename: filename}
+	reply := ReportCompleteReply{}
+
+	ok := call("Coordinator.ReportComplete", &args, &reply)
+
 }
 
 //

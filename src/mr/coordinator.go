@@ -1,6 +1,7 @@
 package mr
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -10,17 +11,15 @@ import (
 )
 
 type Coordinator struct {
-	nReduce int
+	nReduce      int
+	currentState string
 	// Your definitions here.
 
 }
 
-// 0 = unprocessed
-// 1 = processing
-// 2 = processed
 type filesProcessed struct {
 	mu      sync.Mutex
-	filemap map[string]int
+	filemap map[string]string
 }
 
 // Your code here -- RPC handlers for the worker to call.
@@ -41,7 +40,12 @@ func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
 func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
+		if filename == "" {
+			//
+		}
+		// add status here to reply
 		*reply = RequestTaskReply{
+			Status:   c.currentState,
 			Filename: filename,
 			NReduce:  c.nReduce,
 		}
@@ -50,13 +54,24 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 	return nil
 }
 
+func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
+	filesProcessedMap.mu.Lock()
+	defer filesProcessedMap.mu.Unlock()
+	_, exists := filesProcessedMap.filemap[args.Filename]
+	if !exists {
+		fmt.Println(args.Filename + " was not found in filemap")
+	}
+	filesProcessedMap.filemap[args.Filename] = "processed"
+
+}
+
 func (c *Coordinator) AddFileNamesToMap() error {
 	for _, filename := range os.Args[2:] {
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("cannot open %v", filename)
 		}
-		filesProcessedMap.filemap[filename] = 0
+		filesProcessedMap.filemap[filename] = "unprocessed"
 		file.Close()
 	}
 	return nil
@@ -67,8 +82,9 @@ func (c *Coordinator) FetchUnproccessedFileName() string {
 	filesProcessedMap.mu.Lock()
 	defer filesProcessedMap.mu.Unlock()
 	for filename, status := range filesProcessedMap.filemap {
-		if status == 0 {
+		if status == "unprocessed" {
 			unprocessedFilename = filename
+			filesProcessedMap.filemap[filename] = "processing"
 			break
 		}
 	}
@@ -112,8 +128,9 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{nReduce: nReduce}
 
 	// Your code here.
-	filesProcessedMap.filemap = make(map[string]int)
+	filesProcessedMap.filemap = make(map[string]string)
 	c.AddFileNamesToMap()
+	c.currentState = "map"
 	c.server()
 	return &c
 }

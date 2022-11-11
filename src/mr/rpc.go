@@ -34,6 +34,13 @@ type RequestTaskReply struct {
 	Status   string
 }
 
+type ReportCompleteArgs struct {
+	Filename string
+}
+
+type ReportCompleteReply struct {
+}
+
 // Add your RPC definitions here.
 
 // Cook up a unique-ish UNIX-domain socket name

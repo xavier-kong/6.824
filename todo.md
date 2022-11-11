@@ -22,11 +22,11 @@
 			- when job done all workers should exit
 	- hints
 
-
-To get started:
-[] coordinator calculate when map, reduce or done
-	[] need to wait for all maps to complete before beginning reduce
-[] implement coordinator 10s wait for worker to complete else give to other worker
+- Todo:
+	- [] need to wait for all maps to complete before beginning reduce
+	- [] on all map tasks complete -> turn all tasks back to unprocessed but reduce phase
+	- [] line 44 coordinator: check if all tasks are "processed" then change state if so
+	- [] implement coordinator 10s wait for worker to complete else give to other worker
 
 
 
