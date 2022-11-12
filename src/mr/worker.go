@@ -44,16 +44,11 @@ func ihash(key string) int {
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
-	// Your worker implementation here.
-
-	// uncomment to send the Example RPC to the coordinator.
-	//CallExample()
-
 	for {
 		status, filename, nReduce, err := RequestTask()
 		if err != nil {
 			fmt.Println(err)
-			return
+			break
 		}
 
 		switch status {
@@ -62,10 +57,9 @@ func Worker(mapf func(string, string) []KeyValue,
 		case "reduce":
 			runReduce(reducef)
 		default:
-			return
+			break
 		}
 	}
-
 }
 
 func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
@@ -135,35 +129,6 @@ func RequestTask() (string, string, int, error) {
 	}
 
 	return reply.Status, reply.Filename, reply.NReduce, nil
-}
-
-//
-// example function to show how to make an RPC call to the coordinator.
-//
-// the RPC argument and reply types are defined in rpc.go.
-//
-func CallExample() {
-
-	// declare an argument structure.
-	args := ExampleArgs{}
-
-	// fill in the argument(s).
-	args.X = 99
-
-	// declare a reply structure.
-	reply := ExampleReply{}
-
-	// send the RPC request, wait for the reply.
-	// the "Coordinator.Example" tells the
-	// receiving server that we'd like to call
-	// the Example() method of struct Coordinator.
-	ok := call("Coordinator.Example", &args, &reply)
-	if ok {
-		// reply.Y should be 100.
-		fmt.Printf("reply.Y %v\n", reply.Y)
-	} else {
-		fmt.Printf("call failed!\n")
-	}
 }
 
 func ReportComplete(filename string) {

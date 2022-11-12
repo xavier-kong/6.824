@@ -41,7 +41,13 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
 		if filename == "" {
-			//
+			if c.currentState == "map" {
+				c.currentState = "reduce"
+				c.AddFileNamesToMap()
+				filename = c.FetchUnproccessedFileName()
+			} else if c.currentState == "reduce" {
+				c.currentState = "done"
+			}
 		}
 		// add status here to reply
 		*reply = RequestTaskReply{
@@ -66,14 +72,19 @@ func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
 }
 
 func (c *Coordinator) AddFileNamesToMap() error {
-	for _, filename := range os.Args[2:] {
-		file, err := os.Open(filename)
-		if err != nil {
-			log.Fatalf("cannot open %v", filename)
+	if c.currentState == "map" {
+		for _, filename := range os.Args[2:] {
+			file, err := os.Open(filename)
+			if err != nil {
+				log.Fatalf("cannot open %v", filename)
+			}
+			filesProcessedMap.filemap[filename] = "unprocessed"
+			file.Close()
 		}
-		filesProcessedMap.filemap[filename] = "unprocessed"
-		file.Close()
+	} else if c.currentState == "reduce" {
+
 	}
+
 	return nil
 }
 
@@ -89,6 +100,10 @@ func (c *Coordinator) FetchUnproccessedFileName() string {
 		}
 	}
 	return unprocessedFilename
+}
+
+func (c *Coordinator) AddMapOutputToFileMap() {
+
 }
 
 //

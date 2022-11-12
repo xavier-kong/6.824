@@ -23,10 +23,11 @@
 	- hints
 
 - Todo:
+	- [] A reasonable naming convention for intermediate files is mr-X-Y, where X is the Map task number, and Y is the reduce task number.
+	- [] The worker's map task code will need a way to store intermediate key/value pairs in files in a way that can be correctly read back during reduce tasks. One possibility is to use Go's encoding/json package. To write key/value pairs in JSON format to an open file:
+ 	- The map part of your worker can use the ihash(key) function (in worker.go) to pick the reduce task for a given key.
 	- [] need to wait for all maps to complete before beginning reduce
 	- [] on all map tasks complete -> turn all tasks back to unprocessed but reduce phase
 	- [] line 44 coordinator: check if all tasks are "processed" then change state if so
 	- [] implement coordinator 10s wait for worker to complete else give to other worker
-
-
 
