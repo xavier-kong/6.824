@@ -39,6 +39,8 @@ func ihash(key string) int {
 }
 
 //
+
+//
 // main/mrworker.go calls this function.
 //
 func Worker(mapf func(string, string) []KeyValue,
@@ -65,6 +67,7 @@ func Worker(mapf func(string, string) []KeyValue,
 func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
+	wordCountsMap := convertWordCountsToMap(wordCounts)
 
 	sliceLength := len(wordCounts) / nReduce
 
@@ -102,6 +105,20 @@ func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename strin
 	intermediateFile, _ := os.Create(intermediateFileName)
 	fmt.Fprint(intermediateFile, wordCountsSlice)
 	intermediateFile.Close()
+}
+
+func convertWordCountsToMap(wordCounts []KeyValue) map[string]int {
+	wordCountsMap := make(map[string]int)
+	for _, wordCount := range wordCounts {
+		val := wordCountsMap[wordCount.Key]
+		wordCountValue, err := strconv.Atoi(wordCount.Value)
+		if err != nil {
+			fmt.Println("Error with converting " + wordCount.Value + " to int")
+		}
+
+		wordCountsMap[wordCount.Key] = val + wordCountValue
+	}
+	return wordCountsMap
 }
 
 func RequestTask() (string, string, int, error) {
