@@ -23,8 +23,6 @@
 	- hints
 
 - Todo:
-	- [] use encoding/json package, map key/value pairs to json
-	- [] review intermediate map output file names mr-X-Y (where X is the Map task number, and Y is the reduce task number.)
  	- The map part of your worker can use the ihash(key) function (in worker.go) to pick the reduce task for a given key.
 	- [] need to wait for all maps to complete before beginning reduce
 	- [] on all map tasks complete -> turn all tasks back to unprocessed but reduce phase

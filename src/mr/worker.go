@@ -1,6 +1,7 @@
 package mr
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -67,8 +68,6 @@ func Worker(mapf func(string, string) []KeyValue,
 func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
-	wordCountsMap := convertWordCountsToMap(wordCounts)
-
 	sliceLength := len(wordCounts) / nReduce
 
 	sort.Sort(ByKey(wordCounts))
@@ -103,22 +102,12 @@ func getContentsOfFileAsString(filename string) string {
 func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename string) {
 	intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(count)
 	intermediateFile, _ := os.Create(intermediateFileName)
-	fmt.Fprint(intermediateFile, wordCountsSlice)
-	intermediateFile.Close()
-}
-
-func convertWordCountsToMap(wordCounts []KeyValue) map[string]int {
-	wordCountsMap := make(map[string]int)
-	for _, wordCount := range wordCounts {
-		val := wordCountsMap[wordCount.Key]
-		wordCountValue, err := strconv.Atoi(wordCount.Value)
-		if err != nil {
-			fmt.Println("Error with converting " + wordCount.Value + " to int")
-		}
-
-		wordCountsMap[wordCount.Key] = val + wordCountValue
+	wordCountsJson, err := json.Marshal(wordCountsSlice)
+	if err != nil {
+		fmt.Println("error with converting slice to json")
 	}
-	return wordCountsMap
+	fmt.Fprint(intermediateFile, wordCountsJson)
+	intermediateFile.Close()
 }
 
 func RequestTask() (string, string, int, error) {
