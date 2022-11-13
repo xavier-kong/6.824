@@ -72,6 +72,7 @@ func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
 }
 
 func (c *Coordinator) AddFileNamesToMap() error {
+	filesProcessedMap.filemap = map[string]string{}
 	if c.currentState == "map" {
 		for _, filename := range os.Args[2:] {
 			file, err := os.Open(filename)
@@ -82,7 +83,7 @@ func (c *Coordinator) AddFileNamesToMap() error {
 			file.Close()
 		}
 	} else if c.currentState == "reduce" {
-
+		// search  directory for all files with format map-out-{filename}-{count}
 	}
 
 	return nil
@@ -143,7 +144,6 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{nReduce: nReduce}
 
 	// Your code here.
-	filesProcessedMap.filemap = make(map[string]string)
 	c.AddFileNamesToMap()
 	c.currentState = "map"
 	c.server()
