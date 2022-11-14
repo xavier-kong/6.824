@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -83,7 +84,21 @@ func (c *Coordinator) AddFileNamesToMap() error {
 			file.Close()
 		}
 	} else if c.currentState == "reduce" {
-		// search  directory for all files with format map-out-{filename}-{count}
+		files, err := os.ReadDir("./")
+		if err != nil {
+			log.Fatalf("error reading files in reduce state")
+		}
+		for _, file := range files {
+			filename := file.Name()
+			if strings.Contains(filename, "map-out-") {
+				fileContents, err := os.Open(filename)
+				if err != nil {
+					log.Fatalf("cannot open %v", filename)
+				}
+				filesProcessedMap.filemap[filename] = "unprocessed"
+				fileContents.Close()
+			}
+		}
 	}
 
 	return nil
