@@ -39,6 +39,12 @@ func ihash(key string) int {
 	return int(h.Sum32() & 0x7fffffff)
 }
 
+// create worker id!
+func getWorkerId() int {
+	hash := fnv.New32()
+	return int(hash.Sum32())
+}
+
 //
 
 //
@@ -46,6 +52,15 @@ func ihash(key string) int {
 //
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
+
+	workerId := 0
+
+	readyToWork := false
+
+	for !readyToWork {
+		workerId = getWorkerId()
+		readyToWork = NoticeMeSenpai(workerId)
+	}
 
 	for {
 		status, filename, nReduce, err := RequestTask()
@@ -143,6 +158,20 @@ func ReportComplete(filename string) {
 
 	ok := call("Coordinator.ReportComplete", &args, &reply)
 
+}
+
+func NoticeMeSenpai(workerId int) bool {
+	args := NoticeMeSenpaiArgs{Id: workerId}
+	reply := NoticeMeSenpaiReply{}
+
+	ok := call("Coordinator.NoticeMeSenpai", &args, &reply)
+
+	if !ok {
+		fmt.Println("error trying to get senpai to notice me")
+		return false
+	}
+
+	return reply.readyToWork
 }
 
 //

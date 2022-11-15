@@ -41,6 +41,14 @@ type ReportCompleteArgs struct {
 type ReportCompleteReply struct {
 }
 
+type NoticeMeSenpaiArgs struct {
+	Id int
+}
+
+type NoticeMeSenpaiReply struct {
+	readyToWork bool
+}
+
 // Add your RPC definitions here.
 
 // Cook up a unique-ish UNIX-domain socket name

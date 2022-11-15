@@ -14,8 +14,13 @@ import (
 type Coordinator struct {
 	nReduce      int
 	currentState string
+	workers      WorkersMap
 	// Your definitions here.
+}
 
+type WorkersMap struct {
+	mu         sync.Mutex
+	workersMap map[int]string
 }
 
 type filesProcessed struct {
@@ -70,6 +75,20 @@ func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
 	}
 	filesProcessedMap.filemap[args.Filename] = "processed"
 
+}
+
+func (c *Coordinator) NoticeMeSenpai(args *NoticeMeSenpaiArgs, reply *NoticeMeSenpaiReply) {
+	c.workers.mu.Lock()
+	defer c.workers.mu.Unlock()
+	workerId := args.Id
+	_, alreadyExists := c.workers.workersMap[workerId]
+
+	if alreadyExists {
+		reply.readyToWork = false
+	} else {
+		c.workers.workersMap[workerId] = "ready"
+		reply.readyToWork = true
+	}
 }
 
 func (c *Coordinator) AddFileNamesToMap() error {
@@ -160,6 +179,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 
 	// Your code here.
 	c.AddFileNamesToMap()
+	c.workers.workersMap = make(map[int]string)
 	c.currentState = "map"
 	c.server()
 	return &c
