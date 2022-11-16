@@ -57,13 +57,13 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	readyToWork := false
 
-	for !readyToWork {
+	for !readyToWork && workerId == 0 {
 		workerId = getWorkerId()
 		readyToWork = NoticeMeSenpai(workerId)
 	}
 
 	for {
-		status, filename, nReduce, err := RequestTask()
+		status, filename, nReduce, err := RequestTask(workerId)
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -71,7 +71,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 		switch status {
 		case "map":
-			runMap(filename, mapf, nReduce)
+			runMap(filename, mapf, nReduce, workerId)
 		case "reduce":
 			runReduce(reducef)
 		default:
@@ -80,7 +80,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 }
 
-func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
+func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int, workerId int) {
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
 	sliceLength := len(wordCounts) / nReduce
@@ -93,7 +93,7 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 		writeWordCountsToFile(i, wordCountsSlice, filename)
 	}
 
-	go ReportComplete(filename)
+	go ReportComplete(filename, workerId)
 }
 
 func runReduce(reducef func(string, []string) string) {
@@ -125,9 +125,9 @@ func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename strin
 	intermediateFile.Close()
 }
 
-func RequestTask() (string, string, int, error) {
+func RequestTask(workerId int) (string, string, int, error) {
 
-	args := RequestTaskArgs{Status: "ready"}
+	args := RequestTaskArgs{Status: "ready", WorkerId: workerId}
 	reply := RequestTaskReply{}
 
 	ok := call("Coordinator.RequestTask", &args, &reply)
@@ -152,8 +152,8 @@ func RequestTask() (string, string, int, error) {
 	return reply.Status, reply.Filename, reply.NReduce, nil
 }
 
-func ReportComplete(filename string) {
-	args := ReportCompleteArgs{Filename: filename}
+func ReportComplete(filename string, workerId int) {
+	args := ReportCompleteArgs{Filename: filename, WorkerId: workerId}
 	reply := ReportCompleteReply{}
 
 	ok := call("Coordinator.ReportComplete", &args, &reply)

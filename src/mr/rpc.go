@@ -25,7 +25,8 @@ type ExampleReply struct {
 }
 
 type RequestTaskArgs struct {
-	Status string
+	WorkerId int
+	Status   string
 }
 
 type RequestTaskReply struct {
@@ -35,6 +36,7 @@ type RequestTaskReply struct {
 }
 
 type ReportCompleteArgs struct {
+	WorkerId int
 	Filename string
 }
 

@@ -29,6 +29,11 @@
 - Todo
 	- [] ReportComplete implemented in worker and coordinator
 	- [] implement coordinator 10s wait for worker to complete else give to other worker
-		- [] identification method for worker
+		- [] integrate worker id with existing methods
+			- [] request task
+				- [] set worker status to "working"
+				- [] go routine 10s to check if worker still running or done
+			- [] report complete
+				- [] set worker status to "ready"
 		- [] wait method for coordinator
 		- [] integration with ReportComplete method

@@ -38,11 +38,6 @@ type filesProcessed struct {
 
 var filesProcessedMap = new(filesProcessed)
 
-func (c *Coordinator) Example(args *ExampleArgs, reply *ExampleReply) error {
-	reply.Y = args.X + 1
-	return nil
-}
-
 func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
