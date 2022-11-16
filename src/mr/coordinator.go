@@ -12,9 +12,10 @@ import (
 )
 
 type Coordinator struct {
-	nReduce      int
-	currentState string
-	workers      WorkersMap
+	nReduce        int
+	currentState   string
+	workers        WorkersMap
+	filesProcessed FilesProcessedMap
 	// Your definitions here.
 }
 
@@ -23,7 +24,7 @@ type WorkersMap struct {
 	workersMap map[int]string
 }
 
-type filesProcessed struct {
+type FilesProcessedMap struct {
 	mu      sync.Mutex
 	filemap map[string]string
 }
@@ -35,8 +36,6 @@ type filesProcessed struct {
 //
 // the RPC argument and reply types are defined in rpc.go.
 //
-
-var filesProcessedMap = new(filesProcessed)
 
 func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	if args.Status == "ready" {
@@ -62,13 +61,13 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 }
 
 func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
-	filesProcessedMap.mu.Lock()
-	defer filesProcessedMap.mu.Unlock()
-	_, exists := filesProcessedMap.filemap[args.Filename]
+	c.filesProcessed.mu.Lock()
+	defer c.filesProcessed.mu.Unlock()
+	_, exists := c.filesProcessed.filemap[args.Filename]
 	if !exists {
 		fmt.Println(args.Filename + " was not found in filemap")
 	}
-	filesProcessedMap.filemap[args.Filename] = "processed"
+	c.filesProcessed.filemap[args.Filename] = "processed"
 
 }
 
@@ -87,14 +86,14 @@ func (c *Coordinator) NoticeMeSenpai(args *NoticeMeSenpaiArgs, reply *NoticeMeSe
 }
 
 func (c *Coordinator) AddFileNamesToMap() error {
-	filesProcessedMap.filemap = map[string]string{}
+	c.filesProcessed.filemap = map[string]string{}
 	if c.currentState == "map" {
 		for _, filename := range os.Args[2:] {
 			file, err := os.Open(filename)
 			if err != nil {
 				log.Fatalf("cannot open %v", filename)
 			}
-			filesProcessedMap.filemap[filename] = "unprocessed"
+			c.filesProcessed.filemap[filename] = "unprocessed"
 			file.Close()
 		}
 	} else if c.currentState == "reduce" {
@@ -109,7 +108,7 @@ func (c *Coordinator) AddFileNamesToMap() error {
 				if err != nil {
 					log.Fatalf("cannot open %v", filename)
 				}
-				filesProcessedMap.filemap[filename] = "unprocessed"
+				c.filesProcessed.filemap[filename] = "unprocessed"
 				fileContents.Close()
 			}
 		}
@@ -120,12 +119,12 @@ func (c *Coordinator) AddFileNamesToMap() error {
 
 func (c *Coordinator) FetchUnproccessedFileName() string {
 	var unprocessedFilename string
-	filesProcessedMap.mu.Lock()
-	defer filesProcessedMap.mu.Unlock()
-	for filename, status := range filesProcessedMap.filemap {
+	c.filesProcessed.mu.Lock()
+	defer c.filesProcessed.mu.Unlock()
+	for filename, status := range c.filesProcessed.filemap {
 		if status == "unprocessed" {
 			unprocessedFilename = filename
-			filesProcessedMap.filemap[filename] = "processing"
+			c.filesProcessed.filemap[filename] = "processing"
 			break
 		}
 	}
@@ -175,6 +174,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	// Your code here.
 	c.AddFileNamesToMap()
 	c.workers.workersMap = make(map[int]string)
+	c.filesProcessed.filemap = make(map[string]string)
 	c.currentState = "map"
 	c.server()
 	return &c
