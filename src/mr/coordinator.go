@@ -21,7 +21,12 @@ type Coordinator struct {
 
 type WorkersMap struct {
 	mu         sync.Mutex
-	workersMap map[int]string
+	workersMap map[int]WorkerStatus
+}
+
+type WorkerStatus struct {
+	status   string
+	filename string
 }
 
 type FilesProcessedMap struct {
@@ -38,6 +43,9 @@ type FilesProcessedMap struct {
 //
 
 func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
+	workerId := args.WorkerId
+	c.workers.mu.Lock()
+	defer c.workers.mu.Unlock()
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
 		if filename == "" {
@@ -49,6 +57,10 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 				c.currentState = "done"
 			}
 		}
+
+		c.workers.workersMap[workerId] = WorkerStatus{status: "processing", filename: filename}
+		go checkIfWorkerIsStillRunning(workerId)
+
 		// add status here to reply
 		*reply = RequestTaskReply{
 			Status:   c.currentState,
@@ -80,7 +92,7 @@ func (c *Coordinator) NoticeMeSenpai(args *NoticeMeSenpaiArgs, reply *NoticeMeSe
 	if alreadyExists {
 		reply.readyToWork = false
 	} else {
-		c.workers.workersMap[workerId] = "ready"
+		c.workers.workersMap[workerId] = WorkerStatus{status: "ready", filename: ""}
 		reply.readyToWork = true
 	}
 }
@@ -173,7 +185,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 
 	// Your code here.
 	c.AddFileNamesToMap()
-	c.workers.workersMap = make(map[int]string)
+	c.workers.workersMap = make(map[int]WorkerStatus)
 	c.filesProcessed.filemap = make(map[string]string)
 	c.currentState = "map"
 	c.server()
