@@ -62,6 +62,7 @@ func Worker(mapf func(string, string) []KeyValue,
 		readyToWork = NoticeMeSenpai(workerId)
 	}
 
+Loop:
 	for {
 		status, filename, nReduce, err := RequestTask(workerId)
 		if err != nil {
@@ -75,7 +76,7 @@ func Worker(mapf func(string, string) []KeyValue,
 		case "reduce":
 			runReduce(reducef)
 		default:
-			break
+			break Loop
 		}
 	}
 }
@@ -156,7 +157,7 @@ func ReportComplete(filename string, workerId int) {
 	args := ReportCompleteArgs{Filename: filename, WorkerId: workerId}
 	reply := ReportCompleteReply{}
 
-	ok := call("Coordinator.ReportComplete", &args, &reply)
+	call("Coordinator.ReportComplete", &args, &reply)
 
 }
 
