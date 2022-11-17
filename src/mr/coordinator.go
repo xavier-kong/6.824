@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Coordinator struct {
@@ -59,9 +60,8 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 		}
 
 		c.workers.workersMap[workerId] = WorkerStatus{status: "processing", filename: filename}
-		go checkIfWorkerIsStillRunning(workerId)
+		go c.CheckIfWorkerIsStillRunning(workerId)
 
-		// add status here to reply
 		*reply = RequestTaskReply{
 			Status:   c.currentState,
 			Filename: filename,
@@ -72,13 +72,46 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 	return nil
 }
 
+func (c *Coordinator) CheckIfWorkerIsStillRunning(workerId int) {
+	timer := time.NewTimer(10 * time.Second)
+
+	<-timer.C
+
+	c.workers.mu.Lock()
+	c.filesProcessed.mu.Lock()
+	defer c.workers.mu.Unlock()
+	defer c.filesProcessed.mu.Unlock()
+
+	filename := c.workers.workersMap[workerId].filename
+
+	fileStatus := c.filesProcessed.filemap[filename]
+
+	if fileStatus == "processing" {
+		c.filesProcessed.filemap[filename] = "unprocessed"
+		c.workers.workersMap[workerId] = WorkerStatus{filename: "", status: "failed"}
+	}
+}
+
 func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
 	c.filesProcessed.mu.Lock()
+	c.workers.mu.Lock()
 	defer c.filesProcessed.mu.Unlock()
+	defer c.workers.mu.Unlock()
+
+	worker := c.workers.workersMap[args.WorkerId]
+
+	if worker.status == "failed" {
+		c.workers.workersMap[args.WorkerId] = WorkerStatus{status: "ready", filename: ""}
+		return
+	}
+
 	_, exists := c.filesProcessed.filemap[args.Filename]
+
 	if !exists {
 		fmt.Println(args.Filename + " was not found in filemap")
+		return
 	}
+
 	c.filesProcessed.filemap[args.Filename] = "processed"
 
 }
