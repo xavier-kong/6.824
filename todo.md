@@ -26,3 +26,5 @@
  	- The map part of your worker can use the ihash(key) function (in worker.go) to pick the reduce task for a given key.
 
 
+- Todo:
+	- [] Implement reduce functions

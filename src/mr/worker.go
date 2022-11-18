@@ -72,16 +72,18 @@ Loop:
 
 		switch status {
 		case "map":
-			runMap(filename, mapf, nReduce, workerId)
+			runMap(filename, mapf, nReduce)
 		case "reduce":
-			runReduce(reducef)
+			runReduce(filename, reducef)
 		default:
 			break Loop
 		}
+
+		go ReportComplete(filename, workerId)
 	}
 }
 
-func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int, workerId int) {
+func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
 	contents := getContentsOfFileAsString(filename)
 	wordCounts := mapf(filename, contents)
 	sliceLength := len(wordCounts) / nReduce
@@ -93,11 +95,18 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int, 
 		wordCountsSlice := wordCounts[start:end]
 		writeWordCountsToFile(i, wordCountsSlice, filename)
 	}
-
-	go ReportComplete(filename, workerId)
 }
 
-func runReduce(reducef func(string, []string) string) {
+func runReduce(filename string, reducef func(string, []string) string) {
+	contents := getContentsOfFileAsString(filename)
+	contentsBuffer := []byte(contents)
+
+	data := make(map[string]string)
+
+	if err := json.Unmarshal(contentsBuffer, &data); err != nil {
+		fmt.Println("error with Unmarshal json in reduce")
+		return
+	}
 
 }
 
