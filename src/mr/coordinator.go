@@ -47,15 +47,19 @@ func (c *Coordinator) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply
 	workerId := args.WorkerId
 	c.workers.mu.Lock()
 	defer c.workers.mu.Unlock()
+
 	if args.Status == "ready" {
 		filename := c.FetchUnproccessedFileName()
 		if filename == "" {
-			if c.currentState == "map" {
+			switch c.currentState {
+			case "map":
 				c.currentState = "reduce"
 				c.AddFileNamesToMap()
 				filename = c.FetchUnproccessedFileName()
-			} else if c.currentState == "reduce" {
+			case "reduce":
 				c.currentState = "done"
+			default:
+				break
 			}
 		}
 
@@ -92,7 +96,7 @@ func (c *Coordinator) CheckIfWorkerIsStillRunning(workerId int) {
 	}
 }
 
-func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
+func (c *Coordinator) ReportComplete(args *ReportCompleteArgs, reply *ReportCompleteReply) error {
 	c.filesProcessed.mu.Lock()
 	c.workers.mu.Lock()
 	defer c.filesProcessed.mu.Unlock()
@@ -102,37 +106,41 @@ func (c *Coordinator) ReportComplete(args *ReportCompleteArgs) {
 
 	if worker.status == "failed" {
 		c.workers.workersMap[args.WorkerId] = WorkerStatus{status: "ready", filename: ""}
-		return
+		return nil
 	}
 
 	_, exists := c.filesProcessed.filemap[args.Filename]
 
 	if !exists {
 		fmt.Println(args.Filename + " was not found in filemap")
-		return
+		return nil
 	}
 
 	c.filesProcessed.filemap[args.Filename] = "processed"
 
+	return nil
 }
 
-func (c *Coordinator) NoticeMeSenpai(args *NoticeMeSenpaiArgs, reply *NoticeMeSenpaiReply) {
+func (c *Coordinator) NoticeMeSenpai(args *NoticeMeSenpaiArgs, reply *NoticeMeSenpaiReply) error {
 	c.workers.mu.Lock()
 	defer c.workers.mu.Unlock()
 	workerId := args.Id
 	_, alreadyExists := c.workers.workersMap[workerId]
 
 	if alreadyExists {
-		reply.readyToWork = false
+		reply.ReadyToWork = false
 	} else {
 		c.workers.workersMap[workerId] = WorkerStatus{status: "ready", filename: ""}
-		reply.readyToWork = true
+		reply.ReadyToWork = true
 	}
+
+	return nil
 }
 
 func (c *Coordinator) AddFileNamesToMap() error {
 	c.filesProcessed.filemap = map[string]string{}
-	if c.currentState == "map" {
+	switch c.currentState {
+	case "map":
 		for _, filename := range os.Args[2:] {
 			file, err := os.Open(filename)
 			if err != nil {
@@ -141,7 +149,7 @@ func (c *Coordinator) AddFileNamesToMap() error {
 			c.filesProcessed.filemap[filename] = "unprocessed"
 			file.Close()
 		}
-	} else if c.currentState == "reduce" {
+	case "reduce":
 		files, err := os.ReadDir("./")
 		if err != nil {
 			log.Fatalf("error reading files in reduce state")
@@ -157,6 +165,8 @@ func (c *Coordinator) AddFileNamesToMap() error {
 				fileContents.Close()
 			}
 		}
+	default:
+		break
 	}
 
 	return nil
@@ -170,7 +180,7 @@ func (c *Coordinator) FetchUnproccessedFileName() string {
 		if status == "unprocessed" {
 			unprocessedFilename = filename
 			c.filesProcessed.filemap[filename] = "processing"
-			break
+			return unprocessedFilename
 		}
 	}
 	return unprocessedFilename
@@ -217,10 +227,10 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{nReduce: nReduce}
 
 	// Your code here.
-	c.AddFileNamesToMap()
+	c.currentState = "map"
 	c.workers.workersMap = make(map[int]WorkerStatus)
 	c.filesProcessed.filemap = make(map[string]string)
-	c.currentState = "map"
+	c.AddFileNamesToMap()
 	c.server()
 	return &c
 }

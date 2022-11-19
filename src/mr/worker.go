@@ -79,7 +79,7 @@ Loop:
 			break Loop
 		}
 
-		go ReportComplete(filename, workerId)
+		ReportComplete(filename, workerId)
 	}
 }
 
@@ -107,6 +107,8 @@ func runReduce(filename string, reducef func(string, []string) string) {
 		fmt.Println("error with Unmarshal json in reduce")
 		return
 	}
+
+	fmt.Println(data)
 
 }
 
@@ -181,7 +183,7 @@ func NoticeMeSenpai(workerId int) bool {
 		return false
 	}
 
-	return reply.readyToWork
+	return reply.ReadyToWork
 }
 
 //

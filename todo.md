@@ -25,6 +25,16 @@
 - Things to think about:
  	- The map part of your worker can use the ihash(key) function (in worker.go) to pick the reduce task for a given key.
 
+- Run
+	- cd src/main
+	- go build -race -buildmode=plugin ../mrapps/wc.go
+	- rm map-out*
+	- go run -race mrcoordinator.go pg-*.txt
+	- go run -race mrworker.go wc.so
+
 
 - Todo:
+	- [] fix issue when running
 	- [] Implement reduce functions
+
+

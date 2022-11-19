@@ -48,7 +48,7 @@ type NoticeMeSenpaiArgs struct {
 }
 
 type NoticeMeSenpaiReply struct {
-	readyToWork bool
+	ReadyToWork bool
 }
 
 // Add your RPC definitions here.
