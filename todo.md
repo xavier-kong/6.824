@@ -30,7 +30,7 @@
 	- go build -race -buildmode=plugin ../mrapps/wc.go
 	- rm map-out*
 	- go run -race mrcoordinator.go pg-*.txt
-	- go run -race mrworker.go wc.so
+	- go build -race -buildmode=plugin ../mrapps/wc.go && go run -race mrworker.go wc.so
 
 
 - Todo:

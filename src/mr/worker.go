@@ -99,6 +99,7 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 
 func runReduce(filename string, reducef func(string, []string) string) {
 	contents := getContentsOfFileAsString(filename)
+	fmt.Println(contents)
 	contentsBuffer := []byte(contents)
 
 	data := make(map[string]string)
@@ -107,8 +108,6 @@ func runReduce(filename string, reducef func(string, []string) string) {
 		fmt.Println("error with Unmarshal json in reduce")
 		return
 	}
-
-	fmt.Println(data)
 
 }
 
@@ -133,7 +132,7 @@ func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename strin
 	if err != nil {
 		fmt.Println("error with converting slice to json")
 	}
-	fmt.Fprint(intermediateFile, wordCountsJson)
+	fmt.Fprint(intermediateFile, string(wordCountsJson))
 	intermediateFile.Close()
 }
 
