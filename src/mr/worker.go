@@ -99,15 +99,6 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 
 func runReduce(filename string, reducef func(string, []string) string) {
 	contents := getContentsOfFileAsString(filename)
-	fmt.Println(contents)
-	contentsBuffer := []byte(contents)
-
-	data := make(map[string]string)
-
-	if err := json.Unmarshal(contentsBuffer, &data); err != nil {
-		fmt.Println("error with Unmarshal json in reduce")
-		return
-	}
 
 }
 
