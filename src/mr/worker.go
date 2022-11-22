@@ -84,7 +84,8 @@ Loop:
 }
 
 func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) {
-	contents := getContentsOfFileAsString(filename)
+	contentsByte := getContentsOfFile(filename)
+	contents := string(contentsByte)
 	wordCounts := mapf(filename, contents)
 	sliceLength := len(wordCounts) / nReduce
 
@@ -98,11 +99,24 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 }
 
 func runReduce(filename string, reducef func(string, []string) string) {
-	contents := getContentsOfFileAsString(filename)
+	contents := getContentsOfFile(filename)
+	var keyValueData []KeyValue
+	err := json.Unmarshal(contents, &keyValueData)
+
+	if err != nil {
+		fmt.Println("Error with json Unmarshal")
+		return
+	}
+
+	data := make(map[string]int)
+
+	for _, item := range keyValueData {
+		count := reducef(item.Key, keyValueData)
+	}
 
 }
 
-func getContentsOfFileAsString(filename string) string {
+func getContentsOfFile(filename string) []byte {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("cannot open %v", filename)
@@ -112,19 +126,24 @@ func getContentsOfFileAsString(filename string) string {
 		log.Fatalf("cannot read %v", filename)
 	}
 	file.Close()
-	contents := string(contentsBuffer)
-	return contents
+	return contentsBuffer
 }
 
 func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename string) {
 	intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(count)
 	intermediateFile, _ := os.Create(intermediateFileName)
+	defer intermediateFile.Close()
+
 	wordCountsJson, err := json.Marshal(wordCountsSlice)
 	if err != nil {
 		fmt.Println("error with converting slice to json")
 	}
-	fmt.Fprint(intermediateFile, string(wordCountsJson))
-	intermediateFile.Close()
+
+	_, err = intermediateFile.Write(wordCountsJson)
+
+	if err != nil {
+		fmt.Println("error writing to file")
+	}
 }
 
 func RequestTask(workerId int) (string, string, int, error) {

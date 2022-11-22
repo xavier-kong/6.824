@@ -34,7 +34,7 @@
 
 
 - Todo:
-	- [] fix issue when running
 	- [] Implement reduce functions
+		- find way to convert data to valid form for reducef
 
 
