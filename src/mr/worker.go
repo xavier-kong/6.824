@@ -100,18 +100,28 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 
 func runReduce(filename string, reducef func(string, []string) string) {
 	contents := getContentsOfFile(filename)
-	var keyValueData []string
+	var keyValueData []KeyValue
+	var strings []string
 	err := json.Unmarshal(contents, &keyValueData)
+	err = json.Unmarshal(contents, &keyValueData)
 
 	if err != nil {
 		fmt.Println("Error with json Unmarshal")
 		return
 	}
 
-	data := make(map[string]int)
+	uniqueKeys := make(map[string]bool)
+
+	res := make(map[string]int)
 
 	for _, item := range keyValueData {
-		count := reducef(item.Key, keyValueData)
+		_, exists := uniqueKeys[item.Key]
+
+		if !exists {
+			count := reducef(item.Key, strings)
+			res[item.Key] = int(count)
+			uniqueKeys[item.Key] = true
+		}
 	}
 
 }
