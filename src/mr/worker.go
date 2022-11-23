@@ -100,7 +100,7 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 
 func runReduce(filename string, reducef func(string, []string) string) {
 	contents := getContentsOfFile(filename)
-	var keyValueData []KeyValue
+	var keyValueData []string
 	err := json.Unmarshal(contents, &keyValueData)
 
 	if err != nil {
