@@ -102,8 +102,8 @@ func runReduce(filename string, reducef func(string, []string) string) {
 	contents := getContentsOfFile(filename)
 	var keyValueData []KeyValue
 	var strings []string
+
 	err := json.Unmarshal(contents, &keyValueData)
-	err = json.Unmarshal(contents, &keyValueData)
 
 	if err != nil {
 		fmt.Println("Error with json Unmarshal")
@@ -119,7 +119,14 @@ func runReduce(filename string, reducef func(string, []string) string) {
 
 		if !exists {
 			count := reducef(item.Key, strings)
-			res[item.Key] = int(count)
+			val, err := strconv.Atoi(count)
+
+			if err != nil {
+				fmt.Println("error with converting to int")
+				continue
+			}
+
+			res[item.Key] = val
 			uniqueKeys[item.Key] = true
 		}
 	}
