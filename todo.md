@@ -34,7 +34,11 @@
 
 
 - Todo:
-	- [] Implement reduce functions
+	- change map worker
+		- intermediate data structure is an array or arrays of KeyValue
+		- use the hash function to get index
+		- change storage 
+	- Implement reduce functions
 		- find way to convert data to valid form for reducef
 
 

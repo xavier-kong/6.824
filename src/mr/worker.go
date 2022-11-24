@@ -1,3 +1,5 @@
+// Thanks Qingping Meng for the helpful write up. https://medium.com/codex/journey-to-mit-6-824-lab-1-mapreduce-ebe58800ef9e
+
 package mr
 
 import (
