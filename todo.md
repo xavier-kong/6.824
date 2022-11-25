@@ -34,6 +34,16 @@
 
 
 - Todo:
+	- map
+		- pass data into map function and store key value pairs in memory
+		- write key value pairs to disk
+		- pass location of intermediate files back to master
+	- reduce
+		- read all intermediate files
+		- sort by intermediate keys
+		- iterate over sorted intermediate data
+		- pass each key and intermediate values to reduce function
+	
 	- change map worker
 		- intermediate data structure is an array or arrays of KeyValue
 		- use the hash function to get index

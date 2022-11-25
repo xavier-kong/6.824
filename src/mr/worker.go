@@ -89,6 +89,7 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 	contentsByte := getContentsOfFile(filename)
 	contents := string(contentsByte)
 	wordCounts := mapf(filename, contents)
+
 	sliceLength := len(wordCounts) / nReduce
 
 	sort.Sort(ByKey(wordCounts))
