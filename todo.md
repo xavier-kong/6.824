@@ -35,9 +35,9 @@
 
 - Todo:
 	- map
-		- pass data into map function and store key value pairs in memory
-		- write key value pairs to disk
-		- pass location of intermediate files back to master
+		[x] pass data into map function and store key value pairs in memory
+		[x] write key value pairs to disk
+		[x] pass location of intermediate files back to master
 	- reduce
 		- read all intermediate files
 		- sort by intermediate keys

@@ -12,7 +12,6 @@ import (
 	"net/rpc"
 	"os"
 	"sort"
-	"strconv"
 )
 
 // for sorting by key.
@@ -76,7 +75,7 @@ Loop:
 		case "map":
 			runMap(filename, mapf, nReduce)
 		case "reduce":
-			runReduce(filename, reducef)
+			runReduce(filename, reducef, nReduce)
 		default:
 			break Loop
 		}
@@ -90,21 +89,21 @@ func runMap(filename string, mapf func(string, string) []KeyValue, nReduce int) 
 	contents := string(contentsByte)
 	wordCounts := mapf(filename, contents)
 
-	sliceLength := len(wordCounts) / nReduce
-
-	sort.Sort(ByKey(wordCounts))
-	for i := 0; i < nReduce; i += 1 {
-		start := i * sliceLength
-		end := start + sliceLength
-		wordCountsSlice := wordCounts[start:end]
-		writeWordCountsToFile(i, wordCountsSlice, filename)
+	partitionedKva := make([][]KeyValue, nReduce)
+	for _, v := range wordCounts {
+		partitionKey := ihash(v.Key) % nReduce
+		partitionedKva[partitionKey] = append(partitionedKva[partitionKey], v)
 	}
+
+	for i := range partitionedKva {
+		writeWordCountsToFile(partitionedKva[i], filename, i)
+	}
+
 }
 
-func runReduce(filename string, reducef func(string, []string) string) {
+func runReduce(filename string, reducef func(string, []string) string, nReduce int) {
 	contents := getContentsOfFile(filename)
-	var keyValueData []KeyValue
-	var strings []string
+	keyValueData := make([]KeyValue, nReduce)
 
 	err := json.Unmarshal(contents, &keyValueData)
 
@@ -113,25 +112,20 @@ func runReduce(filename string, reducef func(string, []string) string) {
 		return
 	}
 
-	uniqueKeys := make(map[string]bool)
+	sort.Slice(keyValueData, func(i, j int) bool {
+		return keyValueData[i].Key < keyValueData[j].Key
+	})
 
-	res := make(map[string]int)
+	keyValMap := make(map[string][]string)
 
-	for _, item := range keyValueData {
-		_, exists := uniqueKeys[item.Key]
+	for _, v := range keyValueData {
+		vals := keyValMap[v.Key]
+		keyValMap[v.Key] = append(vals, v.Value)
+	}
 
-		if !exists {
-			count := reducef(item.Key, strings)
-			val, err := strconv.Atoi(count)
-
-			if err != nil {
-				fmt.Println("error with converting to int")
-				continue
-			}
-
-			res[item.Key] = val
-			uniqueKeys[item.Key] = true
-		}
+	for key, val := range keyValMap {
+		reduceOutput := reducef(key, val)
+		fmt.Println(key, reduceOutput)
 	}
 
 }
@@ -149,8 +143,8 @@ func getContentsOfFile(filename string) []byte {
 	return contentsBuffer
 }
 
-func writeWordCountsToFile(count int, wordCountsSlice []KeyValue, filename string) {
-	intermediateFileName := "map-out-" + filename + "-" + strconv.Itoa(count)
+func writeWordCountsToFile(wordCountsSlice []KeyValue, filename string, i int) {
+	intermediateFileName := "map-out-" + filename + "-" + fmt.Sprint(i)
 	intermediateFile, _ := os.Create(intermediateFileName)
 	defer intermediateFile.Close()
 
