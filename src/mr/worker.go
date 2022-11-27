@@ -125,7 +125,7 @@ func runReduce(filename string, reducef func(string, []string) string, nReduce i
 
 	for key, val := range keyValMap {
 		reduceOutput := reducef(key, val)
-		fmt.Println(key, reduceOutput)
+
 	}
 
 }

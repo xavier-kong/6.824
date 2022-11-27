@@ -11,8 +11,8 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 		- [x] review crawler.go and kv.go
 - Lec 3:
 	- [x] go by example
-	- [] read GFS paper
-		- 3 system interactions
+	- [ ] read GFS paper
+		- 2. DESIGN OVERVIEW
 
 - Lab 1 (https://pdos.csail.mit.edu/6.824/labs/lab-mr.html)
 
