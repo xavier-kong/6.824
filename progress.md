@@ -12,7 +12,7 @@ https://pdos.csail.mit.edu/6.824/schedule.html
 - Lec 3:
 	- [x] go by example
 	- [ ] read GFS paper
-		- 3. SYSTEM INTERACTIONS (https://pdos.csail.mit.edu/6.824/papers/gfs.pdf)
+		- 3.3 Atomic Record Appends (https://pdos.csail.mit.edu/6.824/papers/gfs.pdf)
 
 - Lab 1 (https://pdos.csail.mit.edu/6.824/labs/lab-mr.html)
 
